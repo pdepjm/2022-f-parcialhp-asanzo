@@ -39,9 +39,6 @@ wingardiumLeviosa = perderPesoPorc 10 . agregarSabor "concentrado"
 diffindo :: Porcentaje -> Hechizo
 diffindo = perderPesoPorc
 
-aguamenti :: Number -> Hechizo
-aguamenti cantidadAgua = agregarPeso cantidadAgua . agregarSabor "suave"
-
 riddikulus :: String -> Hechizo
 riddikulus sabor = agregarSabor (reverse sabor)
 
@@ -90,65 +87,69 @@ pesoPromedio = promedio . map peso . filter estaListo
 type Receta = [Hechizo]
 
 data Mago = UnMago {
-    recetas :: [Receta],
+    hechizos :: [Hechizo],
     cantHorrorcruxes :: Number
-}
+} deriving Show
 
--- Cocinar un postre con una receta (se espera obtener el postre luego de todos los hechizos)
+-- Punto 2A)
 
-cocinar :: Postre -> Receta -> Postre
-cocinar postre hechizos = (foldr1 (.) hechizos) postre
+practicar ::  Hechizo -> Postre -> Mago -> Mago
+practicar hechizo postre = agregarHorrocruxSegun hechizo postre . aprender hechizo
 
--- Otra versión pensando en los valores en lugar de en las funciones:
--- cocinar postre hechizos = foldr ($) postre hechizos
+aprender :: Hechizo -> Mago -> Mago 
+aprender hechizo mago = mago{ hechizos = hechizo : hechizos mago } 
 
--- Punto 2B)
-
-trabajar ::  Receta -> Postre -> Mago -> Mago
-trabajar receta postre = agregarHorrocruxSegun receta postre . aprenderReceta receta
-
-aprenderReceta :: Receta -> Mago -> Mago 
-aprenderReceta receta mago = mago{ recetas = receta : recetas mago } 
-
-agregarHorrocruxSegun :: Receta -> Postre -> Mago -> Mago
-agregarHorrocruxSegun receta postre mago
-    | esEquivalenteAAvadaKedavra receta postre = sumarHorrocrux mago
+agregarHorrocruxSegun :: Hechizo -> Postre -> Mago -> Mago
+agregarHorrocruxSegun hechizo postre mago
+    | esEquivalenteAAvadaKedavra hechizo postre = sumarHorrocrux mago
     | otherwise = mago
 
-esEquivalenteAAvadaKedavra :: Receta -> Postre -> Bool
-esEquivalenteAAvadaKedavra receta postre = (cocinar postre receta) == (avadaKedabra postre)
+esEquivalenteAAvadaKedavra :: Hechizo -> Postre -> Bool
+esEquivalenteAAvadaKedavra hechizo postre = hechizo postre == avadaKedabra postre
 
 sumarHorrocrux :: Mago -> Mago
 sumarHorrocrux mago = mago {cantHorrorcruxes = cantHorrorcruxes mago + 1}
 
 -- 2C)
-puedeSuavizar :: Mago -> Postre -> Bool
-puedeSuavizar mago postre = noTieneHorrorcruxes mago && algunaSuaviza postre (recetas mago)
 
-noTieneHorrorcruxes :: Mago -> Bool
-noTieneHorrorcruxes = (==0) . cantHorrorcruxes
+mejorHechizoV1 :: Postre -> Mago -> Hechizo
+mejorHechizoV1 postre mago = elMejor postre (hechizos mago)
 
-algunaSuaviza :: Postre -> [Receta] -> Bool
-algunaSuaviza postre = any (elem "suave" . sabores . cocinar postre) 
+elMejor :: Postre -> [Hechizo] -> Hechizo
+elMejor postre [hechizo] = hechizo
+elMejor postre (primer:segundo:restohechizos) | esMejor postre primer segundo = elMejor postre (primer:restohechizos)
+    | otherwise = elMejor postre (segundo:restohechizos)
 
--- 2D)
-mejorRecetaV1 :: Postre -> Mago -> Receta
-mejorRecetaV1 postre mago = laMejor postre (recetas mago)
-
-laMejor :: Postre -> [Receta] -> Receta
-laMejor postre [receta] = receta
-laMejor postre (primer:segunda:restoRecetas | esMejor postre primera segunda = laMejor postre (primera:restoRecetas)
-    | otherwise = laMejor postre (segunda:restoRecetas)
-
-esMejor :: Postre -> Receta -> Receta -> Bool
-esMejor postre primera segunda = (length . sabores . cocinar postre) primera > (length . sabores . cocinar postre) segunda
+esMejor :: Postre -> Hechizo -> Hechizo -> Bool
+esMejor postre hechizo1 hechizo2 = (length . sabores . hechizo1) postre > (length . sabores . hechizo2) postre
 
 -- Otra versión
-mejorRecetaV2 ::  Postre -> Mago -> Receta
-mejorRecetaV2 postre mago = foldl1 (laMejorEntre postre) (recetas mago)
+mejorhechizoV2 ::  Postre -> Mago -> Hechizo
+mejorhechizoV2 postre mago = foldl1 (elMejorEntre postre) (hechizos mago)
 
-laMejorEntre :: Postre -> Receta -> Receta -> Receta
-laMejorEntre postre receta1 receta2 | esMejor postre receta1 receta2 = receta1
-    | otherwise = receta2
+elMejorEntre :: Postre -> Hechizo -> Hechizo -> Hechizo
+elMejorEntre postre hechizo1 hechizo2 | esMejor postre hechizo1 hechizo2 = hechizo1
+    | otherwise = hechizo2
 
 
+-- Punto 3 Infinita Magia
+-- Punto 3A)
+
+mesaInfinita :: [Postre]
+mesaInfinita = repeat bizcocho
+
+recetaInfinita :: Receta
+recetaInfinita = repeat avadaKedabra
+
+-- Punto 3B)
+{-
+Verdadero, existe la consulta:
+Prelude> estanListos avadaKedabra mesaInfinita
+
+La ejecución devuelve falso pues no es necesario construir la lista infinita porque el all cuando encuentra el primer postre que no está listo ya corta.
+-}
+
+-- Punto 3C)
+{-
+Falso, no existe una situación en la que se gane un horrorcrux porque un mago para ganarlo debe cocinar con la receta y ver el postre final, y si la receta es infinita no se puede aplicar toda.
+-}
