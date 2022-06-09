@@ -80,11 +80,9 @@ promedio nums = sum nums / length nums
 pesoPromedio :: [Postre] -> Number
 pesoPromedio = promedio . map peso . filter estaListo
 
--- 2 Magos recetas
+-- 2. Magos
 
 -- Punto 2A)
-
-type Receta = [Hechizo]
 
 data Mago = UnMago {
     hechizos :: [Hechizo],
@@ -138,8 +136,8 @@ elMejorEntre postre hechizo1 hechizo2 | esMejor postre hechizo1 hechizo2 = hechi
 mesaInfinita :: [Postre]
 mesaInfinita = repeat bizcocho
 
-recetaInfinita :: Receta
-recetaInfinita = repeat avadaKedabra
+magoInf :: Receta
+magoInf = UnMago { hechizos = repeat avadaKedabra, cantHorrorcruxes = 0}
 
 -- Punto 3B)
 {-
@@ -151,5 +149,5 @@ La ejecución devuelve falso pues no es necesario construir la lista infinita po
 
 -- Punto 3C)
 {-
-Falso, no existe una situación en la que se gane un horrorcrux porque un mago para ganarlo debe cocinar con la receta y ver el postre final, y si la receta es infinita no se puede aplicar toda.
+No existe ninguna forma de conocer el mejor hechizo del mago porque para conocer el mejor hechizo hay que recorrer toda la lista aún teniendo lazy evaluation.
 -}
