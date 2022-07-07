@@ -126,9 +126,21 @@ mejorhechizoV2 ::  Postre -> Mago -> Hechizo
 mejorhechizoV2 postre mago = foldl1 (elMejorEntre postre) (hechizos mago)
 
 elMejorEntre :: Postre -> Hechizo -> Hechizo -> Hechizo
-elMejorEntre postre hechizo1 hechizo2 | esMejor postre hechizo1 hechizo2 = hechizo1
+elMejorEntre postre hechizo1 hechizo2 
+    | esMejor postre hechizo1 hechizo2 = hechizo1
     | otherwise = hechizo2
 
+-- Otra versión más
+mejorhechizoV3 ::  Postre -> Mago -> Hechizo
+mejorhechizoV3 postre mago = mejorGenerico (\hechizo -> (length.sabores.hechizo) postre) (hechizos mago)
+
+mejorGenerico :: Ord a => (b -> a) ->[b] -> b
+mejorGenerico criterio elementos = foldl1 (elMejorEntreGenerico criterio) (elementos)
+
+elMejorEntreGenerico :: Ord a => (b -> a) -> b -> b -> b
+elMejorEntreGenerico criterio elemento1 elemento2
+    | criterio elemento1 > criterio elemento2 = elemento1
+    | otherwise = elemento2
 
 -- Punto 3 Infinita Magia
 -- Punto 3A)
@@ -144,10 +156,10 @@ magoInf = UnMago { hechizos = repeat avadaKedabra, cantHorrorcruxes = 0}
 Verdadero, existe la consulta:
 Prelude> estanListos avadaKedabra mesaInfinita
 
-La ejecución devuelve falso pues no es necesario construir la lista infinita porque el all cuando encuentra el primer postre que no está listo ya corta.
+La ejecución devuelve falso pues debido a la evaluación diferida, el all cuando encuentra el primer postre que no está listo ya retorna y no requiere construir la lista infinita.
 -}
 
 -- Punto 3C)
 {-
-No existe ninguna forma de conocer el mejor hechizo del mago porque para conocer el mejor hechizo hay que recorrer toda la lista aún teniendo lazy evaluation.
+No existe ninguna forma de conocer el mejor hechizo del mago porque para hacerlo hay que evaluar todos los elementos lista, aún teniendo lazy evaluation.
 -}
